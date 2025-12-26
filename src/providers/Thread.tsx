@@ -1,5 +1,6 @@
 import { validate } from "uuid";
 import { getApiKey } from "@/lib/api-key";
+import { getApiUrl } from "@/lib/api-url";
 import { Thread } from "@langchain/langgraph-sdk";
 import { useQueryState } from "nuqs";
 import {
@@ -41,7 +42,8 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
 
   const getThreads = useCallback(async (): Promise<Thread[]> => {
     if (!apiUrl || !assistantId) return [];
-    const client = createClient(apiUrl, getApiKey() ?? undefined);
+    const finalApiUrl = getApiUrl(apiUrl);
+    const client = createClient(finalApiUrl, getApiKey() ?? undefined);
 
     const threads = await client.threads.search({
       metadata: {
