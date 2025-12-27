@@ -23,7 +23,12 @@ export function getApiUrl(backendUrl: string | undefined): string {
   // 1. Explicitly configured to use proxy, OR
   // 2. We're on HTTPS and backend is HTTP (to avoid mixed content)
   if (useProxy || (isHttps && isHttpBackend)) {
-    // Use relative /api path which will proxy to the backend
+    // Use absolute URL for /api path which will proxy to the backend
+    // The SDK requires an absolute URL, so we need to prepend the origin
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}/api`;
+    }
+    // Fallback for server-side (shouldn't normally happen, but just in case)
     return "/api";
   }
 
