@@ -97,7 +97,7 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
         throw error;
       }
     }
-  }, [finalApiUrl, finalAssistantId]);
+  }, [apiUrl, assistantId, finalApiUrl, finalAssistantId, envApiUrl, envAssistantId]);
 
   const value = {
     getThreads,

@@ -44,10 +44,10 @@ function getBackendUrlFromRequest(request: NextRequest): string {
 }
 
 // Create passthrough handlers that read backend URL dynamically
-async function createHandler(
+function createHandler(
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
-) {
-  return async (request: NextRequest) => {
+): (request: NextRequest) => Promise<Response> {
+  return async (request: NextRequest): Promise<Response> => {
     const backendUrl = getBackendUrlFromRequest(request);
     const passthrough = initApiPassthrough({
       apiUrl: backendUrl,
