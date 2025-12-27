@@ -399,31 +399,31 @@ export function Thread() {
                 <div className="sticky bottom-0 flex flex-col items-center bg-white">
                   <ScrollToBottom className="animate-in fade-in-0 zoom-in-95 absolute bottom-full left-1/2 mb-4 -translate-x-1/2" />
 
-                  <div className="w-full max-w-3xl mx-auto mb-8">
+                  <div className="w-full max-w-3xl mx-auto mb-4 sm:mb-8">
                     {/* Suggestive Prompts - Only show before thread is initialized */}
                     {!chatStarted && (
-                      <div className="flex flex-col gap-1.5 px-4 pb-2">
+                      <div className="flex flex-col gap-1.5 px-2 sm:px-4 pb-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-full text-sm font-normal text-left justify-start h-auto py-2 px-3 hover:bg-gray-50 transition-colors"
+                          className="w-full text-xs sm:text-sm font-normal text-left justify-start h-auto py-2 px-2 sm:px-3 hover:bg-gray-50 transition-colors whitespace-normal !whitespace-normal overflow-hidden"
                           onClick={() => handlePromptClick("What was the revenue of Apple, Microsoft, and Google in 2023?")}
                         >
-                          What was the revenue of Apple, Microsoft, and Google in 2023?
+                          <span className="block break-words">What was the revenue of Apple, Microsoft, and Google in 2023?</span>
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-full text-sm font-normal text-left justify-start h-auto py-2 px-3 hover:bg-gray-50 transition-colors"
+                          className="w-full text-xs sm:text-sm font-normal text-left justify-start h-auto py-2 px-2 sm:px-3 hover:bg-gray-50 transition-colors whitespace-normal !whitespace-normal overflow-hidden"
                           onClick={() => handlePromptClick("How is Tesla doing? What are its future projections?")}
                         >
-                          How is Tesla doing? What are its future projections?
+                          <span className="block break-words">How is Tesla doing? What are its future projections?</span>
                         </Button>
                       </div>
                     )}
 
                     <div
-                      className="bg-muted relative z-10 rounded-2xl shadow-xs border border-solid"
+                      className="bg-muted relative z-10 rounded-xl sm:rounded-2xl shadow-xs border border-solid mx-2 sm:mx-0"
                     >
                       <form
                         onSubmit={handleSubmit}
@@ -446,10 +446,10 @@ export function Thread() {
                           }
                         }}
                         placeholder="Type your message..."
-                        className="field-sizing-content resize-none border-none bg-transparent p-3.5 pb-0 shadow-none ring-0 outline-none focus:ring-0 focus:outline-none"
+                        className="field-sizing-content resize-none border-none bg-transparent p-2.5 sm:p-3.5 pb-0 shadow-none ring-0 outline-none focus:ring-0 focus:outline-none"
                       />
 
-                      <div className="flex items-center gap-6 p-2 pt-4">
+                      <div className="flex items-center gap-3 sm:gap-6 p-2 sm:p-2 pt-3 sm:pt-4">
                         <div>
                           <div className="flex items-center space-x-2">
                             <Switch
