@@ -94,7 +94,9 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
         return allThreads;
       } catch (fallbackError) {
         console.error("[ThreadProvider] Fallback search also failed:", fallbackError);
-        throw error;
+        // Return empty array instead of throwing - don't break the app if threads fail
+        console.warn("[ThreadProvider] Thread loading failed, returning empty array to prevent app breakage");
+        return [];
       }
     }
   }, [apiUrl, assistantId, finalApiUrl, finalAssistantId, envApiUrl, envAssistantId]);

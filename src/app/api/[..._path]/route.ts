@@ -52,7 +52,7 @@ function createHandler(
     const passthrough = initApiPassthrough({
       apiUrl: backendUrl,
       apiKey: BACKEND_API_KEY,
-      runtime: "edge",
+      runtime: "nodejs",
     });
     const handler = passthrough[method];
     if (handler && typeof handler === "function") {
@@ -81,4 +81,4 @@ export async function OPTIONS(request: NextRequest) {
   });
 }
 
-export const runtime = "edge";
+export const runtime = "nodejs";
