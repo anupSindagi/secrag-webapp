@@ -15,6 +15,74 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PanelRightOpen, PanelRightClose } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
+function getThreadPreviewText(thread: Thread): string {
+  // Debug: log thread structure to understand what data we have
+  if (process.env.NODE_ENV === "development") {
+    console.log("[getThreadPreviewText] Thread data:", {
+      thread_id: thread.thread_id,
+      hasValues: !!thread.values,
+      valuesType: typeof thread.values,
+      hasMessages: thread.values && typeof thread.values === "object" && "messages" in thread.values,
+      messagesLength: thread.values && typeof thread.values === "object" && "messages" in thread.values 
+        ? (thread.values.messages as any[])?.length 
+        : 0,
+      metadata: thread.metadata,
+    });
+  }
+
+  // Try to get the first human message from thread values
+  if (
+    typeof thread.values === "object" &&
+    thread.values &&
+    "messages" in thread.values &&
+    Array.isArray(thread.values.messages) &&
+    thread.values.messages.length > 0
+  ) {
+    // Find the first human message (user's first message)
+    const firstHumanMessage = thread.values.messages.find(
+      (m) => m.type === "human"
+    );
+    
+    if (firstHumanMessage) {
+      const text = getContentString(firstHumanMessage.content);
+      // Truncate to 50 characters for display
+      if (text && text.trim().length > 0) {
+        const trimmed = text.trim();
+        if (trimmed.length > 50) {
+          return trimmed.substring(0, 50) + "...";
+        }
+        return trimmed;
+      }
+    }
+    
+    // If no human message, try the first message of any type
+    const firstMessage = thread.values.messages[0];
+    if (firstMessage) {
+      const text = getContentString(firstMessage.content);
+      if (text && text.trim().length > 0) {
+        const trimmed = text.trim();
+        if (trimmed.length > 50) {
+          return trimmed.substring(0, 50) + "...";
+        }
+        return trimmed;
+      }
+    }
+  }
+  
+  // Check if thread has metadata with a preview
+  if (thread.metadata && typeof thread.metadata === "object") {
+    const metadata = thread.metadata as Record<string, any>;
+    if (metadata.thread_name && typeof metadata.thread_name === "string" && metadata.thread_name.trim().length > 0) {
+      const name = metadata.thread_name.trim();
+      return name.length > 50 ? name.substring(0, 50) + "..." : name;
+    }
+  }
+  
+  // Fallback: use a shortened thread ID with better formatting
+  const shortId = thread.thread_id.split("-")[0]; // Just the first part of UUID
+  return `Thread ${shortId}...`;
+}
+
 function ThreadList({
   threads,
   onThreadClick,
@@ -26,38 +94,39 @@ function ThreadList({
 
   return (
     <div className="flex h-full w-full flex-col items-start justify-start gap-2 overflow-y-scroll [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
-      {threads.map((t) => {
-        let itemText = t.thread_id;
-        if (
-          typeof t.values === "object" &&
-          t.values &&
-          "messages" in t.values &&
-          Array.isArray(t.values.messages) &&
-          t.values.messages?.length > 0
-        ) {
-          const firstMessage = t.values.messages[0];
-          itemText = getContentString(firstMessage.content);
-        }
-        return (
-          <div
-            key={t.thread_id}
-            className="w-full px-1"
-          >
-            <Button
-              variant="ghost"
-              className="w-[280px] items-start justify-start text-left font-normal"
-              onClick={(e) => {
-                e.preventDefault();
-                onThreadClick?.(t.thread_id);
-                if (t.thread_id === threadId) return;
-                setThreadId(t.thread_id);
-              }}
+      {threads.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-full text-center px-4">
+          <p className="text-sm text-gray-500 mb-2">No threads yet</p>
+          <p className="text-xs text-gray-400">Start a conversation to create your first thread</p>
+        </div>
+      ) : (
+        threads.map((t) => {
+          const previewText = getThreadPreviewText(t);
+          const isActive = t.thread_id === threadId;
+          
+          return (
+            <div
+              key={t.thread_id}
+              className="w-full px-1"
             >
-              <p className="truncate text-ellipsis">{itemText}</p>
-            </Button>
-          </div>
-        );
-      })}
+              <Button
+                variant={isActive ? "secondary" : "ghost"}
+                className={`w-[280px] items-start justify-start text-left font-normal ${
+                  isActive ? "bg-gray-100" : ""
+                }`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onThreadClick?.(t.thread_id);
+                  if (t.thread_id === threadId) return;
+                  setThreadId(t.thread_id);
+                }}
+              >
+                <p className="truncate text-ellipsis">{previewText}</p>
+              </Button>
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }
@@ -87,12 +156,20 @@ export default function ThreadHistory() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    console.log("[ThreadHistory] Loading threads...");
     setThreadsLoading(true);
     getThreads()
-      .then(setThreads)
-      .catch(console.error)
-      .finally(() => setThreadsLoading(false));
-  }, []);
+      .then((threads) => {
+        console.log("[ThreadHistory] Loaded threads:", threads.length);
+        setThreads(threads);
+      })
+      .catch((error) => {
+        console.error("[ThreadHistory] Error loading threads:", error);
+      })
+      .finally(() => {
+        setThreadsLoading(false);
+      });
+  }, [getThreads]);
 
   return (
     <>

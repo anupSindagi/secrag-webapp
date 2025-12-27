@@ -9,6 +9,20 @@ export function getApiUrl(backendUrl: string | undefined): string {
     return "";
   }
 
+  // Always store backend URL in cookie for proxy access (even if not using proxy now)
+  // This ensures the proxy knows the backend URL if it's needed later
+  if (typeof window !== "undefined") {
+    try {
+      // Set cookie with backend URL (expires in 1 hour)
+      const expires = new Date();
+      expires.setHours(expires.getHours() + 1);
+      document.cookie = `backend_url=${encodeURIComponent(backendUrl)}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+      console.log("[getApiUrl] Set backend_url cookie:", backendUrl);
+    } catch (e) {
+      console.warn("[getApiUrl] Failed to set cookie:", e);
+    }
+  }
+
   // If explicitly configured to use proxy, use it
   const useProxy = process.env.NEXT_PUBLIC_USE_API_PROXY === "true";
 
@@ -26,6 +40,7 @@ export function getApiUrl(backendUrl: string | undefined): string {
     // Use absolute URL for /api path which will proxy to the backend
     // The SDK requires an absolute URL, so we need to prepend the origin
     if (typeof window !== "undefined") {
+      console.log("[getApiUrl] Using proxy:", `${window.location.origin}/api`);
       return `${window.location.origin}/api`;
     }
     // Fallback for server-side (shouldn't normally happen, but just in case)
@@ -33,6 +48,7 @@ export function getApiUrl(backendUrl: string | undefined): string {
   }
 
   // Otherwise, use the backend URL directly
+  console.log("[getApiUrl] Using direct connection:", backendUrl);
   return backendUrl;
 }
 

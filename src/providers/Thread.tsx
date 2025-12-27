@@ -35,25 +35,69 @@ function getThreadSearchMetadata(
 }
 
 export function ThreadProvider({ children }: { children: ReactNode }) {
-  const [apiUrl] = useQueryState("apiUrl");
-  const [assistantId] = useQueryState("assistantId");
+  // Get environment variables (same as StreamProvider)
+  const envApiUrl: string | undefined = process.env.NEXT_PUBLIC_API_URL;
+  const envAssistantId: string | undefined = process.env.NEXT_PUBLIC_ASSISTANT_ID;
+
+  // Use URL params with env var fallbacks (same as StreamProvider)
+  const [apiUrl] = useQueryState("apiUrl", {
+    defaultValue: envApiUrl || "",
+  });
+  const [assistantId] = useQueryState("assistantId", {
+    defaultValue: envAssistantId || "",
+  });
+
+  // Determine final values to use, prioritizing URL params then env vars (same as StreamProvider)
+  const finalApiUrl = apiUrl || envApiUrl;
+  const finalAssistantId = assistantId || envAssistantId;
+
   const [threads, setThreads] = useState<Thread[]>([]);
   const [threadsLoading, setThreadsLoading] = useState(false);
 
   const getThreads = useCallback(async (): Promise<Thread[]> => {
-    if (!apiUrl || !assistantId) return [];
-    const finalApiUrl = getApiUrl(apiUrl);
-    const client = createClient(finalApiUrl, getApiKey() ?? undefined);
-
-    const threads = await client.threads.search({
-      metadata: {
-        ...getThreadSearchMetadata(assistantId),
-      },
-      limit: 100,
+    console.log("[ThreadProvider] getThreads called with:", { 
+      apiUrl, 
+      assistantId, 
+      finalApiUrl, 
+      finalAssistantId,
+      envApiUrl,
+      envAssistantId 
     });
+    if (!finalApiUrl || !finalAssistantId) {
+      console.log("[ThreadProvider] Missing apiUrl or assistantId");
+      return [];
+    }
+    const apiUrlToUse = getApiUrl(finalApiUrl);
+    const apiKey = getApiKey() ?? undefined;
+    console.log("[ThreadProvider] Using API URL:", apiUrlToUse, "with key:", !!apiKey);
+    
+    const client = createClient(apiUrlToUse, apiKey);
+    const metadataFilter = getThreadSearchMetadata(finalAssistantId);
+    console.log("[ThreadProvider] Searching with metadata:", metadataFilter);
 
-    return threads;
-  }, [apiUrl, assistantId]);
+    try {
+      const threads = await client.threads.search({
+        metadata: metadataFilter,
+        limit: 100,
+      });
+      console.log("[ThreadProvider] Search returned threads:", threads.length, threads);
+      return threads;
+    } catch (error) {
+      console.error("[ThreadProvider] Error searching threads:", error);
+      // Try fallback search without metadata
+      try {
+        console.log("[ThreadProvider] Attempting fallback search without metadata");
+        const allThreads = await client.threads.search({
+          limit: 100,
+        });
+        console.log("[ThreadProvider] Fallback search returned:", allThreads.length, "threads");
+        return allThreads;
+      } catch (fallbackError) {
+        console.error("[ThreadProvider] Fallback search also failed:", fallbackError);
+        throw error;
+      }
+    }
+  }, [finalApiUrl, finalAssistantId]);
 
   const value = {
     getThreads,

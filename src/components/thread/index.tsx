@@ -149,15 +149,18 @@ export function Thread() {
     prevMessageLength.current = messages.length;
   }, [messages]);
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (input.trim().length === 0 || isLoading) return;
+  const handleSubmit = (e?: FormEvent, messageText?: string) => {
+    if (e) {
+      e.preventDefault();
+    }
+    const textToSubmit = messageText || input;
+    if (textToSubmit.trim().length === 0 || isLoading) return;
     setFirstTokenReceived(false);
 
     const newHumanMessage: Message = {
       id: uuidv4(),
       type: "human",
-      content: [{ type: "text", text: input }] as Message["content"],
+      content: [{ type: "text", text: textToSubmit }] as Message["content"],
     };
 
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
@@ -184,6 +187,11 @@ export function Thread() {
     );
 
     setInput("");
+  };
+
+  const handlePromptClick = (promptText: string) => {
+    // Submit immediately with the prompt text, no need to wait for state update
+    handleSubmit(undefined, promptText);
   };
 
   const handleRegenerate = (
@@ -388,16 +396,39 @@ export function Thread() {
                 </>
               }
               footer={
-                <div className="sticky bottom-0 flex flex-col items-center gap-8 bg-white">
+                <div className="sticky bottom-0 flex flex-col items-center bg-white">
                   <ScrollToBottom className="animate-in fade-in-0 zoom-in-95 absolute bottom-full left-1/2 mb-4 -translate-x-1/2" />
 
-                  <div
-                    className="bg-muted relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-2xl shadow-xs border border-solid"
-                  >
-                    <form
-                      onSubmit={handleSubmit}
-                      className="mx-auto grid max-w-3xl grid-rows-[1fr_auto] gap-2"
+                  <div className="w-full max-w-3xl mx-auto mb-8">
+                    {/* Suggestive Prompts - Only show before thread is initialized */}
+                    {!chatStarted && (
+                      <div className="flex flex-col gap-1.5 px-4 pb-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full text-sm font-normal text-left justify-start h-auto py-2 px-3 hover:bg-gray-50 transition-colors"
+                          onClick={() => handlePromptClick("What was the revenue of Apple, Microsoft, and Google in 2023?")}
+                        >
+                          What was the revenue of Apple, Microsoft, and Google in 2023?
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full text-sm font-normal text-left justify-start h-auto py-2 px-3 hover:bg-gray-50 transition-colors"
+                          onClick={() => handlePromptClick("How is Tesla doing? What are its future projections?")}
+                        >
+                          How is Tesla doing? What are its future projections?
+                        </Button>
+                      </div>
+                    )}
+
+                    <div
+                      className="bg-muted relative z-10 rounded-2xl shadow-xs border border-solid"
                     >
+                      <form
+                        onSubmit={handleSubmit}
+                        className="mx-auto grid max-w-3xl grid-rows-[1fr_auto] gap-2"
+                      >
                       <textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
@@ -453,7 +484,8 @@ export function Thread() {
                           </Button>
                         )}
                       </div>
-                    </form>
+                      </form>
+                    </div>
                   </div>
                 </div>
               }
