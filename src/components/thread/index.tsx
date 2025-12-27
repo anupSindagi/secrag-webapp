@@ -407,9 +407,9 @@ export function Thread() {
                           variant="outline"
                           size="sm"
                           className="w-full text-xs sm:text-sm font-normal text-left justify-start h-auto py-2 px-2 sm:px-3 hover:bg-gray-50 transition-colors whitespace-normal !whitespace-normal overflow-hidden"
-                          onClick={() => handlePromptClick("What was the revenue of Apple, Microsoft, and Google in 2023?")}
+                          onClick={() => handlePromptClick("What was the revenue of Apple, Microsoft, and Google in 2022?")}
                         >
-                          <span className="block break-words">What was the revenue of Apple, Microsoft, and Google in 2023?</span>
+                          <span className="block break-words">What was the revenue of Apple, Microsoft, and Google in 2022?</span>
                         </Button>
                         <Button
                           variant="outline"
